@@ -232,7 +232,10 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 resumen_positivo_plataforma VARCHAR (140),
                 resumen_negativo_plataforma VARCHAR (140),
                 resumen_positivo_descarga   VARCHAR (140),
-                resumen_negativo_descarga   VARCHAR (140)
+                resumen_negativo_descarga   VARCHAR (140),
+                UNIQUE (
+                    id_descarga
+                )
             )`,
             'INSERT INTO Encuesta_Descarga (id_descarga, puntaje_global_experiencia, resumen_positivo_plataforma, resumen_negativo_plataforma, resumen_positivo_descarga, resumen_negativo_descarga) VALUES (?,?,?,?,?,?)',
             [
