@@ -142,10 +142,10 @@ app.post("/api/descargas/:descargaId/setEncuesta", (req, res, next) => {
     var sql = `INSERT INTO Encuesta_Descarga (
         id_descarga,
         puntaje_global_experiencia,
-        resumen_positivo_plataforma,
-        resumen_negativo_plataforma,
         resumen_positivo_descarga,
-        resumen_negativo_descarga
+        resumen_negativo_descarga,
+        resumen_positivo_plataforma,
+        resumen_negativo_plataforma
     )
     VALUES (
         ${req.params.descargaId},
