@@ -181,8 +181,8 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
             query: `Contenido.fecha_pub >=`
         },
         {
-            value: req.query.fechaPubliDesde,
-            query: `Contenido.fecha_pub >=`
+            value: req.query.fechaPubliHasta,
+            query: `Contenido.fecha_pub <=`
         },
         {
             value: req.query.tipoContenido,
@@ -197,18 +197,18 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
     const filtrosCalculados = [
         {
             value: req.query.minDescargas,
-            query: `cant_descargas_por_usuario >=`
+            query: `cantDescargasPorUsuario >=`
         },
         {
             value: req.query.maxDescargas,
-            query: `cant_descargas_por_usuario <=`
+            query: `cantDescargasPorUsuario <=`
         }
     ].filter( (elem) => elem.value != null )
 
     const sortVal = (req.query.sortBy != null) ? req.query.sortBy : ""
     const sortAsc = (req.query.sortAsc != null) ? req.query.sortBy : false
     var sortQuery = "ORDER BY "
-    var sortAlt = ", cant_descargas_por_usuario DESC"
+    var sortAlt = ", cantDescargasPorUsuario DESC"
     switch (sortVal) {
         case 'fechaDescarga':
             sortQuery += `Descarga.fecha_descarga`
@@ -221,7 +221,7 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
             break
         case 'cantDescargas':
         default:
-            sortQuery += `cant_descargas_por_usuario`
+            sortQuery += `cantDescargasPorUsuario`
             sortAlt = ""
             break
     }
@@ -232,10 +232,10 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
 
 
     var sql = `SELECT
-        Contenido.id_contenido AS 'ID Contenido',
-        Contenido.tipo_contenido AS 'Tipo Contenido',
-        Contenido.titulo AS 'Titulo',
-        Contenido.fecha_pub AS 'Fecha Publicacion',
+        Contenido.id_contenido AS 'idContenido',
+        Contenido.tipo_contenido AS 'tipoContenido',
+        Contenido.titulo AS 'titulo',
+        Contenido.fecha_pub AS 'fechaPub',
         (
             SELECT
                 group_concat(Categoria.descripcion, ', ')
@@ -243,9 +243,9 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
             INNER JOIN CategoriasContenido
             ON Categoria.id_categoria = CategoriasContenido.id_categoria
             WHERE CategoriasContenido.id_contenido = Contenido.id_contenido
-        ) AS 'Categorias',
-        count(Descarga.id_descargable) AS cant_descargas_por_usuario,
-        avg(Descarga.velocidad_descarga) AS 'Promedio Velocidad Descarga Usuario'
+        ) AS 'categorias',
+        count(Descarga.id_descargable) AS cantDescargasPorUsuario,
+        avg(Descarga.velocidad_descarga) AS promVelocidadDescUsuario
     FROM Descarga
     INNER JOIN Contenido_Descargable
     ON Descarga.id_descargable = Contenido_Descargable.id_descargable
@@ -253,7 +253,7 @@ app.get("/api/descargas/reporte/byUsuario/:userId", (req, res, next) => {
     ON Contenido_Descargable.id_contenido = Contenido.id_contenido
     WHERE Descarga.id_usuario = ${req.params.userId}
     ${filtros.map((elem) =>
-        `AND ${elem.query} '${elem.value}'\n`).join()
+        `AND ${elem.query} '${elem.value}'\n`).join('')
     }
     GROUP BY Descarga.id_descargable
     -- Un filtro más, tiene que ir despues del GROUP BY ⬇
