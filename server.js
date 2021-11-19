@@ -1,9 +1,11 @@
 // Create express app
 var express = require("express")
+var cors = require('cors')
 var app = express()
 var db = require("./database.js")
 
 
+app.use(cors())
 // parse application/json
 app.use(express.json())
 // parse application/x-www-form-urlencoded
@@ -73,11 +75,11 @@ app.get("/api/contenidos", (req, res, next) => {
 
 app.get("/api/descargas/byUsuario/:userId", (req, res, next) => {
     var sql = `SELECT
-        Descarga.id_descarga AS 'ID Descarga',
-        Contenido.tipo_contenido AS 'Tipo Contenido',
-        Contenido.titulo AS 'Titulo',
-        ifnull(Encuesta_Descarga.puntaje_global_experiencia, 0) AS 'Puntaje Actual Encuesta',
-        Descarga.fecha_descarga AS 'Fecha Descarga'
+        Descarga.id_descarga AS 'idDescarga',
+        Contenido.tipo_contenido AS 'tipoContenido',
+        Contenido.titulo AS 'titulo',
+        ifnull(Encuesta_Descarga.puntaje_global_experiencia, 0) AS 'puntajeEncuesta',
+        Descarga.fecha_descarga AS 'fechaDescarga'
     FROM Descarga
     INNER JOIN Contenido_Descargable
     ON Descarga.id_descargable = Contenido_Descargable.id_descargable
@@ -100,15 +102,21 @@ app.delete("/api/descargas/:descargaId/eliminarEncuesta", (req, res, next) => {
 
 app.get("/api/descargas/:descargaId/getEncuesta", (req, res, next) => {
     var sql = `SELECT
-        Encuesta_Descarga.id_encuesta as 'ID Encuesta',
-        ifnull(Encuesta_Descarga.puntaje_global_experiencia, 0) AS 'Puntaje Actual Encuesta',
-        ifnull(Encuesta_Descarga.resumen_positivo_descarga, '') AS 'Positivo Descarga',
-        ifnull(Encuesta_Descarga.resumen_negativo_descarga, '') AS 'Negativo Descarga',
-        ifnull(Encuesta_Descarga.resumen_positivo_plataforma, '') AS 'Positivo Plataforma',
-        ifnull(Encuesta_Descarga.resumen_negativo_plataforma, '') AS 'Negativo Plataforma'
+        Encuesta_Descarga.id_encuesta as 'idEncuesta',
+        Contenido.titulo AS 'titulo',
+        Descarga.fecha_descarga AS 'fechaDescarga',
+        ifnull(Encuesta_Descarga.puntaje_global_experiencia, 0) AS 'puntajeGlobalEncuesta',
+        ifnull(Encuesta_Descarga.resumen_positivo_descarga, '') AS 'resumenPositivoDescarga',
+        ifnull(Encuesta_Descarga.resumen_negativo_descarga, '') AS 'resumenNegativoDescarga',
+        ifnull(Encuesta_Descarga.resumen_positivo_plataforma, '') AS 'resumenPositivoPlataforma',
+        ifnull(Encuesta_Descarga.resumen_negativo_plataforma, '') AS 'resumenNegativoPlataforma'
     FROM Descarga
-    INNER JOIN Encuesta_Descarga
+    LEFT JOIN Encuesta_Descarga
     ON Encuesta_Descarga.id_descarga = Descarga.id_descarga
+    INNER JOIN Contenido_Descargable
+    ON Descarga.id_descargable = Contenido_Descargable.id_descargable
+    INNER JOIN Contenido
+    ON Contenido_Descargable.id_contenido = Contenido.id_contenido
     WHERE Descarga.id_descarga = ${req.params.descargaId}`
     var params = []
     dbAll(sql, params, res)
